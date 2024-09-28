@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جدول التوقيتات الزمنية</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .table-container {
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #555;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        tr:hover {
+            background-color: #eaeaea;
+        }
+        .copy-button {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            margin-top: 5px; /* Space above the button */
+        }
+        .copy-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>جدول التوقيتات الزمنية</h1>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>فرق التوقيت الأصلي</th>
+                    <th>التوقيت الصيفي مفعل؟</th>
+                    <th>المنطقة الزمنية الأصلية</th>
+                </tr>
+            </thead>
+            <tbody id="timezoneTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const timezoneTable = document.getElementById('timezoneTable');
+
+        function getTimezoneData() {
+            const date = new Date();
+            const januaryOffset = new Date(date.getFullYear(), 0, 1).getTimezoneOffset() / -60; // Offset in January
+            const currentOffset = date.getTimezoneOffset() / -60; // Current offset
+            const offsetStringJanuary = (januaryOffset >= 0 ? '+' : '') + String(januaryOffset).padStart(2, '0') + ':00';
+            const dstActive = currentOffset !== januaryOffset; // Check if DST is active
+
+            // Get the user's time zone name
+            const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            return { offsetStringJanuary, dstActive, timeZoneName };
+        }
+
+        function populateTable() {
+            const { offsetStringJanuary, dstActive, timeZoneName } = getTimezoneData();
+            const row = `<tr>
+                            <td>
+                                ${offsetStringJanuary}
+                                <button class="copy-button" data-offset="${offsetStringJanuary}">نسخ</button>
+                            </td>
+                            <td>${dstActive ? 'نعم' : 'لا'}</td>
+                            <td>
+                                ${timeZoneName}
+                                <button class="copy-button" data-timezone="${timeZoneName}">نسخ</button>
+                            </td>
+                         </tr>`;
+            timezoneTable.innerHTML += row;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('تم النسخ: ' + text);
+            }).catch(err => {
+                console.error('خطأ في النسخ: ', err);
+            });
+        }
+
+        // Event delegation for copy buttons
+        timezoneTable.addEventListener('click', function(event) {
+            if (event.target.classList.contains('copy-button')) {
+                const offset = event.target.dataset.offset;
+                const timezone = event.target.dataset.timezone;
+
+                if (offset) {
+                    copyToClipboard(offset);
+                } else if (timezone) {
+                    copyToClipboard(timezone);
+                }
+            }
+        });
+
+        populateTable();
+    </script>
+</body>
+</html>
