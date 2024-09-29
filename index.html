@@ -19,6 +19,29 @@
             text-align: center;
             margin-bottom: 20px;
         }
+
+.language-button {
+    width: 100px; /* Set a fixed width */
+    height: 50px; /* Set a fixed height */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.language-button:hover {
+    background-color: #0056b3;
+}
+
+.language-button.active {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
         .table-container {
             margin: 20px auto; /* Center the tables */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -67,12 +90,9 @@
 </head>
 <body>
     <div class="language-select">
-        <label for="language">اختر اللغة:</label>
-        <select id="language">
-            <option value="ar">العربية</option>
-            <option value="en">English</option>
-        </select>
-    </div>
+    <button id="btnArabic" class="language-button">العربية</button>
+    <button id="btnEnglish" class="language-button">English</button>
+</div>
 
     <h1 id="mainTitle">جدول التوقيتات الزمنية</h1>
     
@@ -104,174 +124,199 @@
     </div>
 
     <script>
-        const timezoneTable = document.getElementById('timezoneTable');
-        const coordinatesTable = document.getElementById('coordinatesTable');
+    const timezoneTable = document.getElementById('timezoneTable');
+    const coordinatesTable = document.getElementById('coordinatesTable');
 
-        const languageStrings = {
-            ar: {
-                title: "جدول التوقيتات الزمنية",
-                originalOffset: "فرق التوقيت الأصلي",
-                dst: "التوقيت الصيفي مفعل؟",
-                timezone: "المنطقة الزمنية الأصلية",
-                coordinatesTitle: "جدول خطوط العرض والطول",
-                getCoordinates: "احصل على خطوط العرض والطول",
-                latitude: "خط العرض",
-                longitude: "خط الطول",
-                yes: "نعم",
-                no: "لا",
-                copy: "نسخ",
-                copied: "تم النسخ: ",
-                errorPermissionDenied: "تم رفض الإذن للحصول على الموقع.",
-                errorPositionUnavailable: "الموقع غير متوفر.",
-                errorTimeout: "استغرق تحديد الموقع وقتاً طويلاً.",
-                errorUnknown: "حدث خطأ غير معروف."
-            },
-            en: {
-                title: "Timezone Table",
-                originalOffset: "Original Offset",
-                dst: "DST Active?",
-                timezone: "Original Time Zone",
-                coordinatesTitle: "Coordinates Table",
-                getCoordinates: "Get Coordinates",
-                latitude: "Latitude",
-                longitude: "Longitude",
-                yes: "Yes",
-                no: "No",
-                copy: "Copy",
-                copied: "Copied: ",
-                errorPermissionDenied: "Permission denied for geolocation.",
-                errorPositionUnavailable: "Location unavailable.",
-                errorTimeout: "Location request timed out.",
-                errorUnknown: "An unknown error occurred."
-            }
-        };
-
-        function getTimezoneData() {
-            const date = new Date();
-            const januaryOffset = new Date(date.getFullYear(), 0, 1).getTimezoneOffset() / -60;
-            const currentOffset = date.getTimezoneOffset() / -60;
-            const offsetStringJanuary = (januaryOffset >= 0 ? '+' : '') + String(januaryOffset).padStart(2, '0') + ':00';
-            const dstActive = currentOffset !== januaryOffset;
-            const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-            return { offsetStringJanuary, dstActive, timeZoneName };
+    const languageStrings = {
+        ar: {
+            title: "جدول التوقيتات الزمنية",
+            originalOffset: "فرق التوقيت الأصلي",
+            dst: "التوقيت الصيفي مفعل؟",
+            timezone: "المنطقة الزمنية الأصلية",
+            coordinatesTitle: "جدول خطوط العرض والطول",
+            getCoordinates: "احصل على خطوط العرض والطول",
+            latitude: "خط العرض",
+            longitude: "خط الطول",
+            yes: "نعم",
+            no: "لا",
+            copy: "نسخ",
+            copied: "تم النسخ: ",
+            errorPermissionDenied: "تم رفض الإذن للحصول على الموقع.",
+            errorPositionUnavailable: "الموقع غير متوفر.",
+            errorTimeout: "استغرق تحديد الموقع وقتاً طويلاً.",
+            errorUnknown: "حدث خطأ غير معروف."
+        },
+        en: {
+            title: "Timezone Table",
+            originalOffset: "Original Offset",
+            dst: "DST Active?",
+            timezone: "Original Time Zone",
+            coordinatesTitle: "Coordinates Table",
+            getCoordinates: "Get Coordinates",
+            latitude: "Latitude",
+            longitude: "Longitude",
+            yes: "Yes",
+            no: "No",
+            copy: "Copy",
+            copied: "Copied: ",
+            errorPermissionDenied: "Permission denied for geolocation.",
+            errorPositionUnavailable: "Location unavailable.",
+            errorTimeout: "Location request timed out.",
+            errorUnknown: "An unknown error occurred."
         }
+    };
 
-        function populateTimezoneTable() {
-            const { offsetStringJanuary, dstActive, timeZoneName } = getTimezoneData();
-            const row = `<tr>
-                            <td>
-                                ${offsetStringJanuary}
-                                <button class="copy-button" data-offset="${offsetStringJanuary}">${languageStrings[currentLanguage].copy}</button>
-                            </td>
-                            <td>${dstActive ? languageStrings[currentLanguage].yes : languageStrings[currentLanguage].no}</td>
-                            <td>
-                                ${timeZoneName}
-                                <button class="copy-button" data-timezone="${timeZoneName}">${languageStrings[currentLanguage].copy}</button>
-                            </td>
-                         </tr>`;
-            timezoneTable.innerHTML += row;
+    let currentLanguage = 'ar';
+
+    function detectUserLanguage() {
+        const userLang = navigator.language || navigator.userLanguage; 
+        currentLanguage = userLang.startsWith('ar') ? 'ar' : 'en';
+        updateActiveButton(document.getElementById(`btn${currentLanguage.charAt(0).toUpperCase() + currentLanguage.slice(1)}`));
+    }
+
+    document.getElementById('btnArabic').addEventListener('click', function() {
+        setLanguage('ar');
+        updateActiveButton(this);
+    });
+    document.getElementById('btnEnglish').addEventListener('click', function() {
+        setLanguage('en');
+        updateActiveButton(this);
+    });
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        updateLanguage();
+    }
+
+    function updateActiveButton(selectedButton) {
+        const buttons = document.querySelectorAll('.language-button');
+        buttons.forEach(button => {
+            button.classList.remove('active');
+        });
+        selectedButton.classList.add('active');
+    }
+
+    function getTimezoneData() {
+        const date = new Date();
+        const januaryOffset = new Date(date.getFullYear(), 0, 1).getTimezoneOffset() / -60;
+        const currentOffset = date.getTimezoneOffset() / -60;
+        const offsetStringJanuary = (januaryOffset >= 0 ? '+' : '') + String(januaryOffset).padStart(2, '0') + ':00';
+        const dstActive = currentOffset !== januaryOffset;
+        const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        return { offsetStringJanuary, dstActive, timeZoneName };
+    }
+
+    function populateTimezoneTable() {
+        const { offsetStringJanuary, dstActive, timeZoneName } = getTimezoneData();
+        const row = `<tr>
+                        <td>
+                            ${offsetStringJanuary}
+                            <button class="copy-button" data-offset="${offsetStringJanuary}">${languageStrings[currentLanguage].copy}</button>
+                        </td>
+                        <td>${dstActive ? languageStrings[currentLanguage].yes : languageStrings[currentLanguage].no}</td>
+                        <td>
+                            ${timeZoneName}
+                            <button class="copy-button" data-timezone="${timeZoneName}">${languageStrings[currentLanguage].copy}</button>
+                        </td>
+                     </tr>`;
+        timezoneTable.innerHTML += row;
+    }
+
+    function getCoordinates() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert(languageStrings[currentLanguage].errorPermissionDenied);
         }
+    }
 
-        function getCoordinates() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
+    function showPosition(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        const row = `<tr>
+                        <td>
+                            ${latitude}
+                            <button class="copy-button" data-coordinate="${latitude}">${languageStrings[currentLanguage].copy}</button>
+                        </td>
+                        <td>
+                            ${longitude}
+                            <button class="copy-button" data-coordinate="${longitude}">${languageStrings[currentLanguage].copy}</button>
+                        </td>
+                     </tr>`;
+        coordinatesTable.innerHTML += row;
+    }
+
+    function showError(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
                 alert(languageStrings[currentLanguage].errorPermissionDenied);
-            }
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert(languageStrings[currentLanguage].errorPositionUnavailable);
+                break;
+            case error.TIMEOUT:
+                alert(languageStrings[currentLanguage].errorTimeout);
+                break;
+            case error.UNKNOWN_ERROR:
+                alert(languageStrings[currentLanguage].errorUnknown);
+                break;
         }
+    }
 
-        function showPosition(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert(languageStrings[currentLanguage].copied + text);
+        }).catch(err => {
+            console.error('Error copying: ', err);
+        });
+    }
 
-            const row = `<tr>
-                            <td>
-                                ${latitude}
-                                <button class="copy-button" data-coordinate="${latitude}">${languageStrings[currentLanguage].copy}</button>
-                            </td>
-                            <td>
-                                ${longitude}
-                                <button class="copy-button" data-coordinate="${longitude}">${languageStrings[currentLanguage].copy}</button>
-                            </td>
-                         </tr>`;
-            coordinatesTable.innerHTML += row;
-        }
+    function updateLanguage() {
+        document.getElementById('mainTitle').innerText = languageStrings[currentLanguage].title;
+        document.getElementById('pageTitle').innerText = languageStrings[currentLanguage].title;
+        document.getElementById('originalOffsetHeader').innerText = languageStrings[currentLanguage].originalOffset;
+        document.getElementById('dstHeader').innerText = languageStrings[currentLanguage].dst;
+        document.getElementById('timezoneHeader').innerText = languageStrings[currentLanguage].timezone;
+        document.getElementById('coordinatesTitle').innerText = languageStrings[currentLanguage].coordinatesTitle;
+        document.getElementById('latitudeHeader').innerText = languageStrings[currentLanguage].latitude;
+        document.getElementById('longitudeHeader').innerText = languageStrings[currentLanguage].longitude;
+        document.getElementById('getCoordinates').innerText = languageStrings[currentLanguage].getCoordinates;
 
-        function showError(error) {
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    alert(languageStrings[currentLanguage].errorPermissionDenied);
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    alert(languageStrings[currentLanguage].errorPositionUnavailable);
-                    break;
-                case error.TIMEOUT:
-                    alert(languageStrings[currentLanguage].errorTimeout);
-                    break;
-                case error.UNKNOWN_ERROR:
-                    alert(languageStrings[currentLanguage].errorUnknown);
-                    break;
-            }
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert(languageStrings[currentLanguage].copied + text);
-            }).catch(err => {
-                console.error('Error copying: ', err);
-            });
-        }
-
-                let currentLanguage = 'ar';
-
-        function updateLanguage() {
-            const lang = document.getElementById('language').value;
-            currentLanguage = lang;
-
-            document.getElementById('mainTitle').innerText = languageStrings[lang].title;
-            document.getElementById('pageTitle').innerText = languageStrings[lang].title;
-            document.getElementById('originalOffsetHeader').innerText = languageStrings[lang].originalOffset;
-            document.getElementById('dstHeader').innerText = languageStrings[lang].dst;
-            document.getElementById('timezoneHeader').innerText = languageStrings[lang].timezone;
-            document.getElementById('coordinatesTitle').innerText = languageStrings[lang].coordinatesTitle;
-            document.getElementById('latitudeHeader').innerText = languageStrings[lang].latitude;
-            document.getElementById('longitudeHeader').innerText = languageStrings[lang].longitude;
-            document.getElementById('getCoordinates').innerText = languageStrings[lang].getCoordinates;
-
-            // Update existing rows
-            Array.from(timezoneTable.rows).forEach(row => {
-                row.cells[1].innerText = row.cells[1].innerText === languageStrings[currentLanguage === 'ar' ? 'en' : 'ar'].yes ? languageStrings[currentLanguage].yes : languageStrings[currentLanguage].no;
-                row.cells[0].querySelector('button').innerText = languageStrings[currentLanguage].copy;
-                row.cells[2].querySelector('button').innerText = languageStrings[currentLanguage].copy;
-            });
-
-            Array.from(coordinatesTable.rows).forEach(row => {
-                row.cells[0].querySelector('button').innerText = languageStrings[currentLanguage].copy;
-                row.cells[1].querySelector('button').innerText = languageStrings[currentLanguage].copy;
-            });
-        }
-
-        // Event delegation for copy buttons
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('copy-button')) {
-                const offset = event.target.dataset.offset;
-                const timezone = event.target.dataset.timezone;
-                const coordinate = event.target.dataset.coordinate;
-
-                if (offset) {
-                    copyToClipboard(offset);
-                } else if (timezone) {
-                    copyToClipboard(timezone);
-                } else if (coordinate) {
-                    copyToClipboard(coordinate);
-                }
-            }
+        Array.from(timezoneTable.rows).forEach(row => {
+            row.cells[1].innerText = row.cells[1].innerText === languageStrings[currentLanguage === 'ar' ? 'en' : 'ar'].yes ? languageStrings[currentLanguage].yes : languageStrings[currentLanguage].no;
+            row.cells[0].querySelector('button').innerText = languageStrings[currentLanguage].copy;
+            row.cells[2].querySelector('button').innerText = languageStrings[currentLanguage].copy;
         });
 
-        document.getElementById('language').addEventListener('change', updateLanguage);
-        document.getElementById('getCoordinates').addEventListener('click', getCoordinates);
-        populateTimezoneTable();
+        Array.from(coordinatesTable.rows).forEach(row => {
+            row.cells[0].querySelector('button').innerText = languageStrings[currentLanguage].copy;
+            row.cells[1].querySelector('button').innerText = languageStrings[currentLanguage].copy;
+        });
+    }
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('copy-button')) {
+            const offset = event.target.dataset.offset;
+            const timezone = event.target.dataset.timezone;
+            const coordinate = event.target.dataset.coordinate;
+
+            if (offset) {
+                copyToClipboard(offset);
+            } else if (timezone) {
+                copyToClipboard(timezone);
+            } else if (coordinate) {
+                copyToClipboard(coordinate);
+            }
+        }
+    });
+
+    document.getElementById('getCoordinates').addEventListener('click', getCoordinates);
+    populateTimezoneTable();
+
+    // Detect user language and auto-select the appropriate button
+    detectUserLanguage();
 </script>
 </body>
 </html>
