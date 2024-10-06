@@ -799,7 +799,3 @@ var DMath = {
 //---------------------- Init Object -----------------------
 
 var prayTimes = new PrayTimes();
-
-
-// export
-module.exports = PrayTimes;
