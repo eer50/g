@@ -232,21 +232,24 @@
     }
 
     function showPosition(position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+    // Clear existing table rows
+    coordinatesTable.innerHTML = '';
 
-        const row = `<tr>
-                        <td>
-                            ${latitude}
-                            <button class="copy-button" data-coordinate="${latitude}">${languageStrings[currentLanguage].copy}</button>
-                        </td>
-                        <td>
-                            ${longitude}
-                            <button class="copy-button" data-coordinate="${longitude}">${languageStrings[currentLanguage].copy}</button>
-                        </td>
-                     </tr>`;
-        coordinatesTable.innerHTML += row;
-    }
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+
+    const row = `<tr>
+                    <td>
+                        ${latitude}
+                        <button class="copy-button" data-coordinate="${latitude}">${languageStrings[currentLanguage].copy}</button>
+                    </td>
+                    <td>
+                        ${longitude}
+                        <button class="copy-button" data-coordinate="${longitude}">${languageStrings[currentLanguage].copy}</button>
+                    </td>
+                 </tr>`;
+    coordinatesTable.innerHTML += row;
+}
 
     function showError(error) {
         switch(error.code) {
